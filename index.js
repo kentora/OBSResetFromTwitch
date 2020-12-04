@@ -13,11 +13,15 @@ const chat = new tmi.client({
     channels: ['1kentora']
 })
 
+let lastFlush = 0;
+
 chat.on('message', (channel, user, message, self) => {
     if(self) return; // ignore echo, but should not happen
 
     if(isModOrHigher(user, channel) && message == "!flush"){
-        fixTheStuff();
+        if(isAfterTimeout()){
+            fixTheStuff();
+        }
     }
 });
 
@@ -60,10 +64,15 @@ function fixTheStuff(){
             })
         }, 200);
     });
+    lastFlush = Date.now();
 }
 
 function isModOrHigher(user, channel){
     let isMod = user.mod || user['user-type'] === 'mod';
     let isBroad = channel.slice(1) === user.username
     return isMod || isBroad;
+}
+
+function isAfterTimeout(){
+    return (Date.now() - lastFlush) > 30000;
 }
