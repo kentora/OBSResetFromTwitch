@@ -28,7 +28,7 @@ const chat = new tmi.client({
         secure: true,
         reconnect: true
     },
-    channels: [process.env['CHANNEL']]
+    channels: [config.channel]
 })
 
 let lastFlush = 0;
@@ -39,7 +39,7 @@ let twitchConnected = false;
 chat.on('message', (channel, user, message, self) => {
     if (self) return; // ignore echo, but should not happen
 
-    if (isModOrHigher(user, channel) && message == process.env['COMMAND']) {
+    if (isModOrHigher(user, channel) && message == config.command) {
         if (isAfterTimeout()) {
             fixTheStuff();
         }
@@ -100,9 +100,9 @@ process.stdin.on('keypress', (str, key) => {
 });
 
 function fixTheStuff() {
-    obs.send('SetSceneItemProperties', { item: { name: process.env['ITEM_NAME'] }, visible: false }).then(() => {
+    obs.send('SetSceneItemProperties', { item: { name: config.item_name }, visible: false }).then(() => {
         setTimeout(() => {
-            obs.send('SetSceneItemProperties', { item: { name: process.env['ITEM_NAME'] }, visible: true }).then(() => {
+            obs.send('SetSceneItemProperties', { item: { name: config.item_name }, visible: true }).then(() => {
                 console.log("I fixed all the shiiiitz");
             }).catch(err => console.error("Could not set visibility true again", err));
         }, 200);
@@ -117,7 +117,7 @@ function isModOrHigher(user, channel) {
 }
 
 function isAfterTimeout() {
-    return (Date.now() - lastFlush) > parseInt(process.env['TIMEOUT']);
+    return (Date.now() - lastFlush) > parseInt(config.timeout);
 }
 
 function hasMissingConfig(conf){
