@@ -15,9 +15,13 @@ try {
 if (config === undefined || hasMissingConfig(config)) {
     config = config ? config : {};
     config.timeout = config && config.timeout ? config.timeout : rlSync.question("Timeout: ");
-    config.command = config && config.command ? config.command : rlSync.question("Command: ");
+    config.command_refresh = config && config.command_refresh ? config.command_refresh : rlSync.question("Refresh Command: ");
+    config.command_IRL = config && config.command_IRL ? config.command_IRL : rlSync.question("IRL scene Command: ");
+    config.command_privacy = config && config.command_privacy ? config.command_privacy : rlSync.question("Privacy scene Command: ");
     config.channel = config && config.channel ? config.channel : rlSync.question("Channel: ");
-    config.item_name = config && config.item_name ? config.item_name : rlSync.question("Item name in OBS: ");
+    config.item_name = config && config.item_name ? config.item_name : rlSync.question("IRL media name in OBS: ");
+    config.irl_scene = config && config.irl_scene ? config.irl_scene : rlSync.question("IRL scene name in OBS: ");
+    config.privacy_scene = config && config.privacy_scene ? config.privacy_scene : rlSync.question("Privacy scene name in OBS: ");
 
     fs.writeFileSync(path.join(__dirname, "conf.json"), JSON.stringify(config));
 }
@@ -39,9 +43,21 @@ let twitchConnected = false;
 chat.on('message', (channel, user, message, self) => {
     if (self) return; // ignore echo, but should not happen
 
-    if (isModOrHigher(user, channel) && message == config.command) {
+    if (isModOrHigher(user, channel) && message == config.command_refresh) {
         if (isAfterTimeout()) {
             fixTheStuff();
+        }
+    }
+
+    if(isModOrHigher(user, channel) && message == config.command_IRL){
+        if(isAfterTimeout()) {
+            showIrl();
+        }
+    }
+
+    if(isModOrHigher(user, channel) && message == config.command_privacy){
+        if(isAfterTimeout()) {
+            showPrivacy();
         }
     }
 });
@@ -90,13 +106,23 @@ process.stdin.on('keypress', (str, key) => {
         fixTheStuff();
         return;
     }
+    
+    if (key.name == 'p'){
+        showPrivacy();
+        return;
+    }
+
+    if(key.name == 'i'){
+        showIrl();
+        return;
+    }
 
     if (key.name == 's') {
         console.log("Status:\tTwitch " + (twitchConnected ? "connected" : "disconnected") + "\tOBS " + (obsConnected ? "connected" : "disconnected"))
         return;
     }
 
-    console.log("s for status, f for fix, ctrl+c for exit");
+    console.log("s for status, f for fix, i for irl scene, p for privacy scene, ctrl+c for exit");
 });
 
 function fixTheStuff() {
@@ -110,6 +136,21 @@ function fixTheStuff() {
     lastFlush = Date.now();
 }
 
+function showPrivacy(){
+    showScene(config.privacy_scene);
+}
+
+function showIrl(){
+    showScene(config.irl_scene)
+}
+
+function showScene(sceneToShow){
+    console.log("Showing scene: " + sceneToShow);
+    obs.send('SetCurrentScene', {"scene-name": sceneToShow}).then(() => {
+        console.log("Switched the scene");
+    }).catch(err => console.error("Could not switch scene", err));
+}
+
 function isModOrHigher(user, channel) {
     let isMod = user.mod || user['user-type'] === 'mod';
     let isBroad = channel.slice(1) === user.username
@@ -121,5 +162,5 @@ function isAfterTimeout() {
 }
 
 function hasMissingConfig(conf){
-    return !conf.timeout || !conf.command || !conf.channel || !conf.item_name;
+    return !conf.timeout || !conf.command_refresh || !conf.command_IRL || !conf.command_privacy || !conf.channel || !conf.item_name || !conf.irl_scene || ! conf.privacy_scene;
 }
