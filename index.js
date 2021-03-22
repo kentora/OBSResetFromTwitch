@@ -43,19 +43,19 @@ let twitchConnected = false;
 chat.on('message', (channel, user, message, self) => {
     if (self) return; // ignore echo, but should not happen
 
-    if (isModOrHigher(user, channel) && message == config.command_refresh) {
+    if (isModOrHigher(user, channel) && commandIs(message, config.command_refresh)) {
         if (isAfterTimeout()) {
             fixTheStuff();
         }
     }
 
-    if(isModOrHigher(user, channel) && message == config.command_IRL){
+    if(isModOrHigher(user, channel) && commandIs(message, config.command_IRL)){
         if(isAfterTimeout()) {
             showIrl();
         }
     }
 
-    if(isModOrHigher(user, channel) && message == config.command_privacy){
+    if(isModOrHigher(user, channel) && commandIs(message, config.command_privacy)){
         if(isAfterTimeout()) {
             showPrivacy();
         }
@@ -155,6 +155,10 @@ function isModOrHigher(user, channel) {
     let isMod = user.mod || user['user-type'] === 'mod';
     let isBroad = channel.slice(1) === user.username
     return isMod || isBroad;
+}
+
+function commandIs(message, cmd){
+    return message.toUpperCase() == cmd.toUpperCase();
 }
 
 function isAfterTimeout() {
