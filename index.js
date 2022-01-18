@@ -9,7 +9,7 @@ const tmi = require('tmi.js');
 var config;
 
 try {
-    config = require('./conf.json')
+    config = require(__dirname + '/conf.json')
 } catch (e) { }
 
 if (config === undefined || hasMissingConfig(config)) {
